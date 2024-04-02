@@ -1,0 +1,89 @@
+#Creador: Lorena Cuevas
+#Análisis de datos de tiempo real
+
+install.packages("pacman") #llamar e instalar paquetes de datos/fórmulas
+
+library(pacman) #ejecuta los paquetes
+
+p_load("readr",  #llama las bases de datos
+       "dplyr")  #facilita el manejo de datos 
+
+#llamar la base de datos 
+
+datos_pcr <- read_csv(file="https://raw.githubusercontent.com/ManuelLaraMVZ/Transcript-mica/main/Genes.csv")
+
+head(datos_pcr) #ver datos en la consola
+
+#Obtención de los genes referencia y de interés
+
+actina <- datos_pcr %>% #modifica las tablas de datos para extraer información
+  slice(1) #llama una fila de la tabla 
+
+actina #refleja el resultado llamado antes 
+
+genes_interes <- datos_pcr %>% 
+  slice(-1) #si queremos eliminar una fila es más fácil ponerlo con negativos
+
+genes_interes
+
+#Promediar los controles
+
+#Opción "A"
+
+promedio_actina <-actina %>% 
+  mutate(Mean_Cx = (C1+C2+C3)/3) %>% #cambia una de las filas o crea una nueva columna
+  mutate(Mean_Tx = (T1+T2+T3)/3) %>% 
+  select(Gen, Mean_Cx, Mean_Tx)
+
+promedio_actina
+
+#Opción "B"
+
+promedio_actina <-actina %>% 
+  mutate(Mean_Cx = (C1+C2+C3)/3) %>% #cambia una de las filas o crea una nueva columna
+  mutate(Mean_Tx = (T1+T2+T3)/3) %>% 
+  select(1, 8, 9)
+
+promedio_actina
+
+#Promediar los genes de interes
+
+#Opción "A"
+
+promedio_GI <- genes_interes %>% 
+  mutate(Mean_Cx = (C1+C2+C3)/3) %>% 
+  mutate(Mean_Tx = (T1+T2+T3)/3) %>% 
+  select(Gen, Mean_Cx, Mean_Tx)
+
+promedio_GI
+
+#Opción "B"
+
+promedio_GI <- genes_interes %>% 
+  mutate(Mean_Cx = (C1+C2+C3)/3) %>% 
+  mutate(Mean_Tx = (T1+T2+T3)/3) %>% 
+  select(1, 8, 9)
+
+promedio_GI
+
+
+#Analisis DCT
+
+DCT <- promedio_GI %>% 
+  mutate(DCT_Cx = (Mean_Cx - promedio_actina$Mean_Cx)) %>% 
+  mutate(DCT_Tx = (Mean_Tx - promedio_actina$Mean_Tx)) %>% 
+  select(Gen, DCT_Cx, DCT_Tx)
+
+DCT
+
+#Análisis DDCT
+
+DDCT <- DCT %>% 
+  mutate(DDCT = (DCT_Tx - DCT_Cx)) %>% 
+  mutate("2^-DDCT" = (2^(-DDCT))) #agregar comillas a los nombres si tienen números para hacerlo un caracter
+
+DDCT
+
+#Guardar base de datos en formato .csv
+
+write.csv(DDCT, file = "2DDCT.csv", row.names = FALSE)
